@@ -18,7 +18,7 @@ export interface ContactsData {
 export const defaultContactsData: ContactsData = {
   phone: "+7 (777) 323-17-15",
   email: "info@baks.kz",
-  address: "Республика Казахстан, 050000, г. Астана,
+  address: "Республика Казахстан, 050000, г. Астана",
   workingHours: {
     weekdays: "09:00 - 19:00",
     saturday: "10:00 - 16:00",
