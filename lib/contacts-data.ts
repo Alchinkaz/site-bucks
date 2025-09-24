@@ -18,18 +18,18 @@ export interface ContactsData {
 export const defaultContactsData: ContactsData = {
   phone: "+7 (777) 323-17-15",
   email: "info@baks.kz",
-  address: "Республика Казахстан, 050000, г. Алматы, ул. Абая, 150/230",
+  address: "Республика Казахстан, 050000, г. Астана,
   workingHours: {
     weekdays: "09:00 - 19:00",
     saturday: "10:00 - 16:00",
     sunday: "Выходной",
   },
   whatsappNumbers: {
-    primary: "77053333082",
+    primary: "777732331715",
   },
   mapIframe: "",
-  gisLink: "https://go.2gis.com/SQyMg",
-  gisButtonText: "Смотреть в 2ГИС",
+  gisLink: "https://yandex.kz/profile/100846790751",
+  gisButtonText: "Смотреть в Яндекс Картах",
 }
 
 export const getContactsData = (): ContactsData => {
