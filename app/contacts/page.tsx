@@ -19,7 +19,7 @@ export default function ContactsPage() {
     },
     whatsappNumbers: {
       primary: "77773231715",
-      secondary: "77053333082",
+      secondary: "77773231715",
     },
     mapIframe: "",
     gisLink: "https://go.2gis.com/SQyMg",

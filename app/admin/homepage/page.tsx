@@ -367,7 +367,7 @@ export default function HomepageAdminPage() {
                 id="heroButtonLink"
                 value={homepageData.heroButtonLink}
                 onChange={(e) => handleInputChange("heroButtonLink", e.target.value)}
-                placeholder="https://wa.me/77053333082"
+                placeholder="https://wa.me/77773231715"
                 className="bg-[#0a0a0a] border-[#1a1a1a] text-white placeholder:text-gray-400"
               />
             </div>
@@ -1066,7 +1066,7 @@ export default function HomepageAdminPage() {
                   id="contactButtonLink"
                   value={homepageData.contactsSection.buttonLink}
                   onChange={(e) => handleContactsChange("buttonLink", e.target.value)}
-                  placeholder="https://wa.me/77053333082"
+                  placeholder="https://wa.me/77773231715"
                   className="bg-[#0a0a0a] border-[#1a1a1a] text-white placeholder:text-gray-400"
                 />
               </div>

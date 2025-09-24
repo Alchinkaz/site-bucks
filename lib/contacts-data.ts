@@ -25,7 +25,7 @@ export const defaultContactsData: ContactsData = {
     sunday: "Выходной",
   },
   whatsappNumbers: {
-    primary: "777732331715",
+    primary: "77773231715",
   },
   mapIframe: "",
   gisLink: "https://yandex.kz/profile/100846790751",

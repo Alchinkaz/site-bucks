@@ -16,13 +16,13 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
   const [contactsData, setContactsData] = useState<any>(null)
 
   const handlePhoneClick = () => {
-    const phoneNumber = contactsData?.whatsappNumbers?.primary || "77053333082"
+    const phoneNumber = contactsData?.whatsappNumbers?.primary || "77773231715"
     window.open(`tel:+${phoneNumber}`, "_self")
   }
 
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent("Здравствуйте! Я хотел бы получить информацию о проекте Orda Premium Burabay.")
-    const whatsappNumber = contactsData?.whatsappNumbers?.primary || "77053333082"
+    const whatsappNumber = contactsData?.whatsappNumbers?.primary || "77773231715"
     window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank")
   }
 

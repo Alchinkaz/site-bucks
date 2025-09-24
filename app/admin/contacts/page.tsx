@@ -258,7 +258,7 @@ export default function AdminContactsPage() {
                   id="whatsapp-primary"
                   value={contactsData.whatsappNumbers.primary}
                   onChange={(e) => updateWhatsApp("primary", e.target.value)}
-                  placeholder="77053333082"
+                  placeholder="77773231715"
                   className="bg-[#0a0a0a] border-[#1a1a1a] text-white placeholder:text-gray-400"
                 />
                 <p className="text-sm text-gray-400 mt-1">Используется для плавающих WhatsApp кнопок на сайте</p>

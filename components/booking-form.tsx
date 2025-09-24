@@ -82,7 +82,7 @@ export default function BookingForm({ isOpen, onClose }: BookingFormProps) {
     const message = encodeURIComponent(
       `Здравствуйте! Я оставил заявку на расчет стоимости на сайте Bucks. Хотел бы получить консультацию по обмену валют.`,
     )
-    const whatsappNumber = contactsData?.whatsappNumbers?.primary || "77053333082"
+    const whatsappNumber = contactsData?.whatsappNumbers?.primary || "77773231715"
     window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank")
   }
 

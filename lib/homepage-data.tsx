@@ -78,7 +78,7 @@ const defaultHomepageData: HomepageData = {
   heroTitle: "Обмен ветхой валюты в Астане по выгодному курсу",
   heroSubtitle: "Принимаем доллары, евро, фунты, франки и другие валюты с дефектами, печатями и повреждениями.",
   heroButtonText: "Получить консультацию",
-  heroButtonLink: "https://wa.me/777732331715",
+  heroButtonLink: "https://wa.me/77773231715",
   heroImage: "/money-bills-background.jpg",
 
   aboutImage: "/placeholder.svg?height=270&width=480",
@@ -184,7 +184,7 @@ const defaultHomepageData: HomepageData = {
     phone: "+7 (777) 323-17-15",
     email: "shotkin.azat@gmail.com",
     buttonText: "Получить консультацию",
-    buttonLink: "https://wa.me/777732331715",
+    buttonLink: "https://wa.me/77773231715",
     mapIframe: `<iframe
       src="https://yandex.kz/map-widget/v1/?from=mapframe&ll=76.952539%2C43.218606&mode=search&ol=geo&ouri=ymapsbm1%3A%2F%2Fgeo%3Fdata%3DCgg1MzE2ODMwMhIg0prQsNC30LDSm9GB0YLQsNC90LDQvdGC0YsiCg0r5JlCFdvyLEI%2C&source=mapframe&utm_source=mapframe&z=10"
       width="100%"
