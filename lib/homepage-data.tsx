@@ -73,6 +73,33 @@ export interface HomepageData {
   tickerTexts?: string[]
 }
 
+const NEW_WHATSAPP_LINK = "https://wa.me/77773231715"
+const OLD_WHATSAPP_LINKS = [
+  "https://wa.me/77053333082",
+  "https://wa.me/777732331715",
+]
+
+function sanitizeHomepageData(input: HomepageData): HomepageData {
+  const replaceLink = (link: string): string => {
+    if (!link) return link
+    for (const old of OLD_WHATSAPP_LINKS) {
+      if (link.includes(old)) return link.replace(old, NEW_WHATSAPP_LINK)
+    }
+    return link
+  }
+
+  const sanitized: HomepageData = {
+    ...input,
+    heroButtonLink: replaceLink(input.heroButtonLink),
+    contactsSection: {
+      ...input.contactsSection,
+      buttonLink: replaceLink(input.contactsSection?.buttonLink),
+    },
+  }
+
+  return sanitized
+}
+
 // Default homepage data
 const defaultHomepageData: HomepageData = {
   heroTitle: "Обмен ветхой валюты в Астане по выгодному курсу",
@@ -252,7 +279,13 @@ export function getHomepageData(): HomepageData {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
       try {
-        homepageData = { ...defaultHomepageData, ...JSON.parse(stored) }
+        const merged = { ...defaultHomepageData, ...JSON.parse(stored) } as HomepageData
+        const sanitized = sanitizeHomepageData(merged)
+        homepageData = sanitized
+        // Persist back if we changed anything
+        if (JSON.stringify(merged) !== JSON.stringify(sanitized)) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized))
+        }
       } catch (error) {
         console.error("Error loading homepage data from localStorage:", error)
       }
