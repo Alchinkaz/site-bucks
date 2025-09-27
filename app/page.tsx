@@ -95,7 +95,10 @@ export default function Home() {
         setHomepageData(homepage)
         setContactsData(contacts)
         
-        fetchCurrentRates(true)
+        // Загружаем курсы валют после установки homepageData
+        setTimeout(() => {
+          fetchCurrentRates(true)
+        }, 100)
       } catch (error) {
         console.error("Error loading data:", error)
       } finally {
@@ -104,7 +107,17 @@ export default function Home() {
     }
 
     loadData()
+  }, [])
 
+  // Отдельный useEffect для курсов валют, который срабатывает когда homepageData загружен
+  useEffect(() => {
+    if (homepageData) {
+      console.log("💰 HomepageData loaded, fetching currency rates")
+      fetchCurrentRates(true)
+    }
+  }, [homepageData])
+
+  useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         console.log(" Page became visible, updating currency rates")
