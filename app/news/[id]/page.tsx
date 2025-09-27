@@ -4,8 +4,8 @@ import { Calendar } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import Navbar from "@/components/navbar"
-import { getNewsWithDetails } from "@/lib/news-data"
-import { getContactsData } from "@/lib/contacts-data"
+import { getNewsWithDetails } from "@/lib/supabase-news"
+import { getContactsData } from "@/lib/supabase-contacts"
 import { useEffect, useState } from "react"
 
 export default function NewsDetailPage({ params }: { params: { id: string } }) {
@@ -14,12 +14,23 @@ export default function NewsDetailPage({ params }: { params: { id: string } }) {
   const [contactsData, setContactsData] = useState<any>(null)
 
   useEffect(() => {
-    const newsData = getNewsWithDetails(params.id)
-    setNews(newsData)
-    setLoading(false)
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        const [newsData, contacts] = await Promise.all([
+          getNewsWithDetails(params.id),
+          getContactsData()
+        ])
+        setNews(newsData)
+        setContactsData(contacts)
+      } catch (error) {
+        console.error("Error loading data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-    const contacts = getContactsData()
-    setContactsData(contacts)
+    loadData()
   }, [params.id])
 
   if (loading) {
@@ -29,6 +40,7 @@ export default function NewsDetailPage({ params }: { params: { id: string } }) {
         <div className="h-20"></div>
         <div className="flex items-center justify-center py-24">
           <div className="text-center">
+            <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-gray-400">Загрузка...</p>
           </div>
         </div>

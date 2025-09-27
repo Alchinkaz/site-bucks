@@ -5,43 +5,56 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Phone, Mail, MapPin } from "lucide-react"
 import { useState, useEffect } from "react"
 import Navbar from "@/components/navbar"
-import { type ContactsData, getContactsData, initializeContactsData } from "@/lib/contacts-data"
+import { type ContactsData, getContactsData, initializeContactsData } from "@/lib/supabase-contacts"
 
 export default function ContactsPage() {
-  const [contactsData, setContactsData] = useState<ContactsData>({
-    phone: "+7 (777) 323-17-15",
-    email: "info@baks.kz",
-    address: "Республика Казахстан, 050000, г. Алматы, ул. Абая, 150/230",
-    workingHours: {
-      weekdays: "09:00 - 19:00",
-      saturday: "10:00 - 16:00",
-      sunday: "Выходной",
-    },
-    whatsappNumbers: {
-      primary: "77773231715",
-      secondary: "77773231715",
-    },
-    mapIframe: "",
-    gisLink: "https://go.2gis.com/SQyMg",
-    gisButtonText: "Смотреть в 2ГИС",
-  })
+  const [contactsData, setContactsData] = useState<ContactsData | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    initializeContactsData()
-    const data = getContactsData()
-    setContactsData(data)
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        await initializeContactsData()
+        const data = await getContactsData()
+        setContactsData(data)
+      } catch (error) {
+        console.error("Error loading contacts data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
   }, [])
 
   const openWhatsApp = () => {
-    window.open(`https://wa.me/${contactsData.whatsappNumbers.primary}`, "_blank")
+    if (contactsData) {
+      window.open(`https://wa.me/${contactsData.whatsappNumbers.primary}`, "_blank")
+    }
   }
 
   const open2GIS = () => {
-    window.open(contactsData.gisLink, "_blank")
+    if (contactsData) {
+      window.open(contactsData.gisLink, "_blank")
+    }
   }
 
   const openEmail = () => {
-    window.location.href = `mailto:${contactsData.email}`
+    if (contactsData) {
+      window.location.href = `mailto:${contactsData.email}`
+    }
+  }
+
+  if (loading || !contactsData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#0a0a0a" }}>
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white">Загрузка...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

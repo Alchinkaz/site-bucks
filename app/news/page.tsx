@@ -6,27 +6,41 @@ import { Calendar } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import Navbar from "@/components/navbar"
-import { getPublishedNews, formatNewsDate } from "@/lib/news-data"
+import { getPublishedNews, formatNewsDate } from "@/lib/supabase-news"
 import { useEffect, useState } from "react"
-import { getContactsData } from "@/lib/contacts-data"
+import { getContactsData } from "@/lib/supabase-contacts"
 
 export default function NewsPage() {
   const [newsData, setNewsData] = useState<any[]>([])
   const [contactsData, setContactsData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const publishedNews = getPublishedNews()
-    const formattedNews = publishedNews.map((article) => ({
-      id: article.id,
-      title: article.title,
-      description: article.description,
-      date: formatNewsDate(article.createdAt),
-      image: article.image || "/placeholder.svg?height=200&width=400",
-    }))
-    setNewsData(formattedNews)
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        const [publishedNews, contacts] = await Promise.all([
+          getPublishedNews(),
+          getContactsData()
+        ])
+        
+        const formattedNews = publishedNews.map((article) => ({
+          id: article.id,
+          title: article.title,
+          description: article.description,
+          date: formatNewsDate(article.createdAt),
+          image: article.image || "/placeholder.svg?height=200&width=400",
+        }))
+        setNewsData(formattedNews)
+        setContactsData(contacts)
+      } catch (error) {
+        console.error("Error loading data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-    const contacts = getContactsData()
-    setContactsData(contacts)
+    loadData()
   }, [])
 
   return (
@@ -46,9 +60,14 @@ export default function NewsPage() {
       {/* News Grid */}
       <section className="py-16 bg-foreground">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
-          {newsData.length === 0 ? (
+          {loading ? (
             <div className="text-center py-12">
-              <p className="text-gray-400 text-lg">Новости загружаются...</p>
+              <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-gray-400 text-lg">Загрузка новостей...</p>
+            </div>
+          ) : newsData.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-400 text-lg">Новости не найдены</p>
             </div>
           ) : (
             <>

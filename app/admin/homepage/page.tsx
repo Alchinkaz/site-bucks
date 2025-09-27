@@ -16,36 +16,10 @@ import {
   type Review,
   type ImageGalleryItem,
   type FAQItem,
-} from "@/lib/homepage-data"
+} from "@/lib/supabase-homepage"
 
 export default function HomepageAdminPage() {
-  const [homepageData, setHomepageData] = useState<HomepageData>({
-    heroTitle: "",
-    heroSubtitle: "",
-    heroButtonText: "",
-    heroButtonLink: "",
-    heroImage: "",
-    aboutImage: "",
-    aboutText: "",
-    aboutDescription: "",
-    stat1Title: "",
-    stat1Subtitle: "",
-    stat2Title: "",
-    stat2Subtitle: "",
-    stat3Title: "",
-    stat3Subtitle: "",
-    reviews: [],
-    imageGallery: [],
-    faqItems: [],
-    contactsSection: {
-      phone: "",
-      email: "",
-      buttonText: "",
-      buttonLink: "",
-      mapIframe: "",
-    },
-    tickerTexts: [],
-  })
+  const [homepageData, setHomepageData] = useState<HomepageData | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState("")
   const [editingReview, setEditingReview] = useState<Review | null>(null)
@@ -55,21 +29,35 @@ export default function HomepageAdminPage() {
   const [newImage, setNewImage] = useState<Partial<ImageGalleryItem>>({})
   const [newFaq, setNewFaq] = useState<Partial<FAQItem>>({})
   const [newTickerText, setNewTickerText] = useState("")
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const data = getHomepageData()
-    setHomepageData(data)
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        const data = await getHomepageData()
+        setHomepageData(data)
+      } catch (error) {
+        console.error("Error loading homepage data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
   }, [])
 
   const handleInputChange = (field: keyof HomepageData, value: string) => {
-    setHomepageData((prev) => ({
-      ...prev,
-      [field]: value,
-    }))
+    if (homepageData) {
+      setHomepageData((prev) => prev ? ({
+        ...prev,
+        [field]: value,
+      }) : null)
+    }
   }
 
   const handleAddReview = () => {
-    if (newReview.name && newReview.text && newReview.rating) {
+    if (newReview.name && newReview.text && newReview.rating && homepageData) {
       const review: Review = {
         id: Date.now().toString(),
         name: newReview.name,
@@ -77,10 +65,10 @@ export default function HomepageAdminPage() {
         rating: newReview.rating,
         date: newReview.date || "Сегодня",
       }
-      setHomepageData((prev) => ({
+      setHomepageData((prev) => prev ? ({
         ...prev,
         reviews: [...prev.reviews, review],
-      }))
+      }) : null)
       setNewReview({})
     }
   }
@@ -211,21 +199,25 @@ export default function HomepageAdminPage() {
   }
 
   const handleContactsChange = (field: keyof typeof homepageData.contactsSection, value: string) => {
-    setHomepageData((prev) => ({
-      ...prev,
-      contactsSection: {
-        ...prev.contactsSection,
-        [field]: value,
-      },
-    }))
+    if (homepageData) {
+      setHomepageData((prev) => prev ? ({
+        ...prev,
+        contactsSection: {
+          ...prev.contactsSection,
+          [field]: value,
+        },
+      }) : null)
+    }
   }
 
   const handleSave = async () => {
+    if (!homepageData) return
+    
     setIsSaving(true)
     setSaveMessage("")
 
     try {
-      updateHomepageData(homepageData)
+      await updateHomepageData(homepageData)
       setSaveMessage("Данные успешно сохранены!")
       setTimeout(() => setSaveMessage(""), 3000)
     } catch (error) {
@@ -280,6 +272,17 @@ export default function HomepageAdminPage() {
 
   const addFaq = () => {
     handleAddFAQ()
+  }
+
+  if (loading || !homepageData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#0a0a0a" }}>
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white">Загрузка...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

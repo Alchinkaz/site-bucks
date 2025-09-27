@@ -9,9 +9,9 @@ import Navbar from "@/components/navbar"
 import BookingForm from "@/components/booking-form"
 import MapComponent from "@/components/map-component" // Import the new MapComponent
 import { useState, useEffect } from "react"
-import { getHomepageNews } from "@/lib/news-data"
-import { getHomepageData, type HomepageData } from "@/lib/homepage-data"
-import { getContactsData } from "@/lib/contacts-data"
+import { getHomepageNews } from "@/lib/supabase-news"
+import { getHomepageData, type HomepageData } from "@/lib/supabase-homepage"
+import { getContactsData } from "@/lib/supabase-contacts"
 
 export default function Home() {
   const [isBookingFormOpen, setIsBookingFormOpen] = useState(false)
@@ -22,6 +22,7 @@ export default function Home() {
   const [isImageVisible, setIsImageVisible] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<string>("")
   const [contactsData, setContactsData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
   const openBookingForm = () => {
     setIsBookingFormOpen(true)
@@ -56,18 +57,15 @@ export default function Home() {
         const rates = await response.json()
         console.log(" Received fresh rates:", rates)
 
-        const currentData = getHomepageData()
-        const updatedData = {
-          ...currentData,
-          currencyRates: rates.rates,
+        if (homepageData) {
+          const updatedData = {
+            ...homepageData,
+            currencyRates: rates.rates,
+          }
+          setHomepageData(updatedData)
+          setLastUpdated(rates.lastUpdated)
+          console.log(" Currency rates updated successfully")
         }
-
-        localStorage.setItem("homepage-data", JSON.stringify(updatedData))
-        setHomepageData(updatedData)
-        setLastUpdated(rates.lastUpdated)
-
-        window.dispatchEvent(new CustomEvent("homepage-data-updated", { detail: updatedData }))
-        console.log(" Currency rates updated successfully")
       }
     } catch (error) {
       console.error("Ошибка при получении курсов валют:", error)
@@ -75,19 +73,28 @@ export default function Home() {
   }
 
   useEffect(() => {
-    console.log(" Loading initial homepage data")
-    const data = getHomepageData()
-    setHomepageData(data)
-
-    const contacts = getContactsData()
-    setContactsData(contacts)
-
-    fetchCurrentRates(true)
-
-    const handleDataUpdate = (event: CustomEvent) => {
-      console.log(" Homepage data updated, re-rendering component")
-      setHomepageData(event.detail)
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        console.log(" Loading initial homepage data")
+        
+        const [homepage, contacts] = await Promise.all([
+          getHomepageData(),
+          getContactsData()
+        ])
+        
+        setHomepageData(homepage)
+        setContactsData(contacts)
+        
+        fetchCurrentRates(true)
+      } catch (error) {
+        console.error("Error loading data:", error)
+      } finally {
+        setLoading(false)
+      }
     }
+
+    loadData()
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
@@ -109,31 +116,41 @@ export default function Home() {
       5 * 60 * 1000,
     ) // 5 minutes
 
-    window.addEventListener("homepage-data-updated", handleDataUpdate as EventListener)
     document.addEventListener("visibilitychange", handleVisibilityChange)
     window.addEventListener("focus", handleFocus)
 
     return () => {
-      window.removeEventListener("homepage-data-updated", handleDataUpdate as EventListener)
       document.removeEventListener("visibilitychange", handleVisibilityChange)
       window.removeEventListener("focus", handleFocus)
       clearInterval(refreshInterval)
     }
   }, [])
 
-  const newsItems = getHomepageNews()
-    .slice(0, 3)
-    .map((article) => ({
-      id: article.id,
-      title: article.title,
-      description: article.description,
-      date: new Date(article.createdAt).toLocaleDateString("ru-RU", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-      image: article.image || "/placeholder.svg?height=200&width=400",
-    }))
+  const [newsItems, setNewsItems] = useState<any[]>([])
+
+  useEffect(() => {
+    const loadNews = async () => {
+      try {
+        const news = await getHomepageNews()
+        const items = news.slice(0, 3).map((article) => ({
+          id: article.id,
+          title: article.title,
+          description: article.description,
+          date: new Date(article.createdAt).toLocaleDateString("ru-RU", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
+          image: article.image || "/placeholder.svg?height=200&width=400",
+        }))
+        setNewsItems(items)
+      } catch (error) {
+        console.error("Error loading news:", error)
+      }
+    }
+
+    loadNews()
+  }, [])
 
   const reviews = homepageData?.reviews || []
 
@@ -165,7 +182,7 @@ export default function Home() {
     return () => clearInterval(interval)
   }, [homepageData?.imageGallery])
 
-  if (!homepageData) {
+  if (loading || !homepageData) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#0a0a0a" }}>
         <div className="text-center">
