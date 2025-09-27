@@ -1,9 +1,36 @@
 -- =============================================
--- ОБНОВЛЕНИЕ ID НОВОСТЕЙ НА АВТОИНКРЕМЕНТНЫЕ
+-- ПРОСТОЕ ОБНОВЛЕНИЕ ID НОВОСТЕЙ
 -- =============================================
 
--- 1. Создаем новую таблицу с автоинкрементными ID
-CREATE TABLE IF NOT EXISTS news_articles_new (
+-- 1. Сначала создаем пользователя admin
+INSERT INTO users (id, username, password_hash, role, created_at, updated_at) 
+VALUES (
+  '00000000-0000-0000-0000-000000000001',
+  'admin',
+  'admin123',
+  'admin',
+  NOW(),
+  NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- 2. Проверяем, существует ли таблица news_articles
+DO $$
+BEGIN
+    -- Если таблица существует, удаляем все данные и пересоздаем с новыми ID
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'news_articles') THEN
+        -- Удаляем все данные из таблицы
+        DELETE FROM news_articles;
+        
+        -- Сбрасываем последовательность ID (если есть)
+        DROP SEQUENCE IF EXISTS news_articles_id_seq CASCADE;
+        
+        -- Удаляем таблицу
+        DROP TABLE news_articles CASCADE;
+    END IF;
+END $$;
+
+-- 3. Создаем новую таблицу с автоинкрементными ID
+CREATE TABLE news_articles (
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
@@ -18,51 +45,16 @@ CREATE TABLE IF NOT EXISTS news_articles_new (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 2. Копируем данные из старой таблицы (если есть)
--- Сначала создаем пользователя admin если его нет
-INSERT INTO users (id, username, password_hash, role, created_at, updated_at) 
-VALUES (
-  '00000000-0000-0000-0000-000000000001',
-  'admin',
-  'admin123',
-  'admin',
-  NOW(),
-  NOW()
-) ON CONFLICT (id) DO NOTHING;
-
--- Теперь копируем данные из старой таблицы
-INSERT INTO news_articles_new (title, description, content, image, content_image, content_sections, published, show_on_homepage, created_by, created_at, updated_at)
-SELECT 
-  title, 
-  description, 
-  content, 
-  image, 
-  content_image, 
-  content_sections, 
-  published, 
-  show_on_homepage, 
-  COALESCE(created_by, '00000000-0000-0000-0000-000000000001'), -- Используем admin ID если created_by NULL
-  created_at, 
-  updated_at
-FROM news_articles
-ORDER BY created_at;
-
--- 3. Удаляем старую таблицу
-DROP TABLE IF EXISTS news_articles CASCADE;
-
--- 4. Переименовываем новую таблицу
-ALTER TABLE news_articles_new RENAME TO news_articles;
-
--- 5. Создаем индексы
+-- 4. Создаем индексы
 CREATE INDEX IF NOT EXISTS idx_news_published ON news_articles(published);
 CREATE INDEX IF NOT EXISTS idx_news_homepage ON news_articles(show_on_homepage);
 CREATE INDEX IF NOT EXISTS idx_news_created_at ON news_articles(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_news_created_by ON news_articles(created_by);
 
--- 6. Включаем RLS
+-- 5. Включаем RLS
 ALTER TABLE news_articles ENABLE ROW LEVEL SECURITY;
 
--- 7. Создаем политики
+-- 6. Создаем политики
 CREATE POLICY "Anyone can view published news" ON news_articles FOR SELECT USING (published = true);
 CREATE POLICY "Admins can view all news" ON news_articles FOR SELECT USING (
     EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
@@ -71,30 +63,11 @@ CREATE POLICY "Only admins can modify news" ON news_articles FOR ALL USING (
     EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
 );
 
--- 8. Создаем триггер для updated_at
+-- 7. Создаем триггер для updated_at
 CREATE TRIGGER update_news_articles_updated_at BEFORE UPDATE ON news_articles
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 9. Пересоздаем представления
-CREATE OR REPLACE VIEW published_news AS
-SELECT 
-    na.*,
-    u.username as author_username
-FROM news_articles na
-LEFT JOIN users u ON na.created_by = u.id
-WHERE na.published = true
-ORDER BY na.created_at DESC;
-
-CREATE OR REPLACE VIEW homepage_news AS
-SELECT 
-    na.*,
-    u.username as author_username
-FROM news_articles na
-LEFT JOIN users u ON na.created_by = u.id
-WHERE na.published = true AND na.show_on_homepage = true
-ORDER BY na.created_at DESC;
-
--- 10. Добавляем тестовые новости с простыми ID
+-- 8. Добавляем тестовые новости с простыми ID
 INSERT INTO news_articles (
     title, description, content, image, content_image, content_sections, published, show_on_homepage, created_by
 ) VALUES 
@@ -126,7 +99,7 @@ INSERT INTO news_articles (
     ]'::jsonb,
     true,
     true,
-    (SELECT id FROM users WHERE username = 'admin' LIMIT 1)
+    '00000000-0000-0000-0000-000000000001'
 ),
 (
     'Расширение часов работы в выходные дни',
@@ -155,7 +128,7 @@ INSERT INTO news_articles (
     ]'::jsonb,
     true,
     true,
-    (SELECT id FROM users WHERE username = 'admin' LIMIT 1)
+    '00000000-0000-0000-0000-000000000001'
 ),
 (
     'Введение новых валют в обмен',
@@ -187,8 +160,27 @@ INSERT INTO news_articles (
     ]'::jsonb,
     true,
     false,
-    (SELECT id FROM users WHERE username = 'admin' LIMIT 1)
+    '00000000-0000-0000-0000-000000000001'
 );
+
+-- 9. Пересоздаем представления
+CREATE OR REPLACE VIEW published_news AS
+SELECT 
+    na.*,
+    u.username as author_username
+FROM news_articles na
+LEFT JOIN users u ON na.created_by = u.id
+WHERE na.published = true
+ORDER BY na.created_at DESC;
+
+CREATE OR REPLACE VIEW homepage_news AS
+SELECT 
+    na.*,
+    u.username as author_username
+FROM news_articles na
+LEFT JOIN users u ON na.created_by = u.id
+WHERE na.published = true AND na.show_on_homepage = true
+ORDER BY na.created_at DESC;
 
 -- Сообщение об успешном выполнении
 DO $$
@@ -198,5 +190,6 @@ BEGIN
     RAISE NOTICE '=============================================';
     RAISE NOTICE 'Теперь URL новостей будут выглядеть как:';
     RAISE NOTICE '/news/1, /news/2, /news/3 и т.д.';
+    RAISE NOTICE 'Пользователь admin создан: admin / admin123';
     RAISE NOTICE '=============================================';
 END $$;

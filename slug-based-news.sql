@@ -1,10 +1,51 @@
 -- =============================================
--- ОБНОВЛЕНИЕ ID НОВОСТЕЙ НА АВТОИНКРЕМЕНТНЫЕ
+-- СИСТЕМА SLUG-BASED ID ДЛЯ НОВОСТЕЙ
 -- =============================================
 
--- 1. Создаем новую таблицу с автоинкрементными ID
-CREATE TABLE IF NOT EXISTS news_articles_new (
-    id SERIAL PRIMARY KEY,
+-- 1. Создаем функцию для генерации slug из заголовка
+CREATE OR REPLACE FUNCTION generate_slug(title TEXT) RETURNS TEXT AS $$
+BEGIN
+    RETURN lower(
+        regexp_replace(
+            regexp_replace(
+                regexp_replace(
+                    regexp_replace(title, '[^а-яА-Яa-zA-Z0-9\s]', '', 'g'),
+                    '\s+', '-', 'g'
+                ),
+                '^-+|-+$', '', 'g'
+            ),
+            '-+', '-', 'g'
+        )
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+-- 2. Создаем функцию для генерации уникального slug
+CREATE OR REPLACE FUNCTION generate_unique_slug(title TEXT, table_name TEXT) RETURNS TEXT AS $$
+DECLARE
+    base_slug TEXT;
+    final_slug TEXT;
+    counter INTEGER := 0;
+BEGIN
+    base_slug := generate_slug(title);
+    final_slug := base_slug;
+    
+    -- Проверяем уникальность и добавляем число если нужно
+    WHILE EXISTS (SELECT 1 FROM news_articles WHERE id = final_slug) LOOP
+        counter := counter + 1;
+        final_slug := base_slug || '-' || counter;
+    END LOOP;
+    
+    RETURN final_slug;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 3. Удаляем старую таблицу если существует
+DROP TABLE IF EXISTS news_articles CASCADE;
+
+-- 4. Создаем новую таблицу с TEXT ID (slug)
+CREATE TABLE news_articles (
+    id TEXT PRIMARY KEY, -- Теперь ID это slug
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     content TEXT NOT NULL,
@@ -17,41 +58,6 @@ CREATE TABLE IF NOT EXISTS news_articles_new (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-
--- 2. Копируем данные из старой таблицы (если есть)
--- Сначала создаем пользователя admin если его нет
-INSERT INTO users (id, username, password_hash, role, created_at, updated_at) 
-VALUES (
-  '00000000-0000-0000-0000-000000000001',
-  'admin',
-  'admin123',
-  'admin',
-  NOW(),
-  NOW()
-) ON CONFLICT (id) DO NOTHING;
-
--- Теперь копируем данные из старой таблицы
-INSERT INTO news_articles_new (title, description, content, image, content_image, content_sections, published, show_on_homepage, created_by, created_at, updated_at)
-SELECT 
-  title, 
-  description, 
-  content, 
-  image, 
-  content_image, 
-  content_sections, 
-  published, 
-  show_on_homepage, 
-  COALESCE(created_by, '00000000-0000-0000-0000-000000000001'), -- Используем admin ID если created_by NULL
-  created_at, 
-  updated_at
-FROM news_articles
-ORDER BY created_at;
-
--- 3. Удаляем старую таблицу
-DROP TABLE IF EXISTS news_articles CASCADE;
-
--- 4. Переименовываем новую таблицу
-ALTER TABLE news_articles_new RENAME TO news_articles;
 
 -- 5. Создаем индексы
 CREATE INDEX IF NOT EXISTS idx_news_published ON news_articles(published);
@@ -75,30 +81,29 @@ CREATE POLICY "Only admins can modify news" ON news_articles FOR ALL USING (
 CREATE TRIGGER update_news_articles_updated_at BEFORE UPDATE ON news_articles
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 9. Пересоздаем представления
-CREATE OR REPLACE VIEW published_news AS
-SELECT 
-    na.*,
-    u.username as author_username
-FROM news_articles na
-LEFT JOIN users u ON na.created_by = u.id
-WHERE na.published = true
-ORDER BY na.created_at DESC;
+-- 9. Создаем триггер для автоматической генерации slug при вставке
+CREATE OR REPLACE FUNCTION auto_generate_news_slug() RETURNS TRIGGER AS $$
+BEGIN
+    -- Если ID не указан или пустой, генерируем slug из заголовка
+    IF NEW.id IS NULL OR NEW.id = '' THEN
+        NEW.id := generate_unique_slug(NEW.title, 'news_articles');
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE VIEW homepage_news AS
-SELECT 
-    na.*,
-    u.username as author_username
-FROM news_articles na
-LEFT JOIN users u ON na.created_by = u.id
-WHERE na.published = true AND na.show_on_homepage = true
-ORDER BY na.created_at DESC;
+CREATE TRIGGER trigger_auto_generate_news_slug
+    BEFORE INSERT ON news_articles
+    FOR EACH ROW
+    EXECUTE FUNCTION auto_generate_news_slug();
 
--- 10. Добавляем тестовые новости с простыми ID
+-- 10. Добавляем тестовые новости с красивыми slug
 INSERT INTO news_articles (
-    title, description, content, image, content_image, content_sections, published, show_on_homepage, created_by
+    id, title, description, content, image, content_image, content_sections, published, show_on_homepage, created_by
 ) VALUES 
 (
+    'novye-kursy-obmena-povrezhdennyh-dollarov-ssha',
     'Новые курсы обмена поврежденных долларов США',
     'Обновили тарифы на обмен поврежденных банкнот долларов США. Теперь принимаем купюры с незначительными повреждениями по еще более выгодному курсу.',
     'С 15 декабря 2024 года вступают в силу новые, более выгодные тарифы на обмен поврежденных банкнот долларов США. Мы пересмотрели критерии оценки состояния купюр и теперь можем предложить лучшие условия для наших клиентов.
@@ -129,6 +134,7 @@ INSERT INTO news_articles (
     (SELECT id FROM users WHERE username = 'admin' LIMIT 1)
 ),
 (
+    'rasshirenie-chasov-raboty-v-vyhodnye-dni',
     'Расширение часов работы в выходные дни',
     'С радостью сообщаем, что теперь мы работаем по субботам до 18:00! Это позволит нашим клиентам удобнее планировать визиты для обмена валют.',
     'Уважаемые клиенты! Мы рады сообщить о расширении часов работы в выходные дни.
@@ -158,6 +164,7 @@ INSERT INTO news_articles (
     (SELECT id FROM users WHERE username = 'admin' LIMIT 1)
 ),
 (
+    'vvedenie-novyh-valyut-v-obmen',
     'Введение новых валют в обмен',
     'Теперь мы принимаем к обмену китайские юани (CNY) и японские иены (JPY). Это расширяет возможности для наших клиентов, работающих с азиатскими рынками.',
     'Мы продолжаем расширять список принимаемых валют для удобства наших клиентов.
@@ -190,13 +197,37 @@ INSERT INTO news_articles (
     (SELECT id FROM users WHERE username = 'admin' LIMIT 1)
 );
 
+-- 11. Пересоздаем представления
+CREATE OR REPLACE VIEW published_news AS
+SELECT 
+    na.*,
+    u.username as author_username
+FROM news_articles na
+LEFT JOIN users u ON na.created_by = u.id
+WHERE na.published = true
+ORDER BY na.created_at DESC;
+
+CREATE OR REPLACE VIEW homepage_news AS
+SELECT 
+    na.*,
+    u.username as author_username
+FROM news_articles na
+LEFT JOIN users u ON na.created_by = u.id
+WHERE na.published = true AND na.show_on_homepage = true
+ORDER BY na.created_at DESC;
+
 -- Сообщение об успешном выполнении
 DO $$
 BEGIN
     RAISE NOTICE '=============================================';
-    RAISE NOTICE 'НОВОСТИ ОБНОВЛЕНЫ НА АВТОИНКРЕМЕНТНЫЕ ID';
+    RAISE NOTICE 'НОВОСТИ ОБНОВЛЕНЫ НА SLUG-BASED ID';
     RAISE NOTICE '=============================================';
     RAISE NOTICE 'Теперь URL новостей будут выглядеть как:';
-    RAISE NOTICE '/news/1, /news/2, /news/3 и т.д.';
+    RAISE NOTICE '/news/novye-kursy-obmena-povrezhdennyh-dollarov-ssha';
+    RAISE NOTICE '/news/rasshirenie-chasov-raboty-v-vyhodnye-dni';
+    RAISE NOTICE '/news/vvedenie-novyh-valyut-v-obmen';
+    RAISE NOTICE '=============================================';
+    RAISE NOTICE 'При создании новых новостей slug генерируется автоматически!';
     RAISE NOTICE '=============================================';
 END $$;
+

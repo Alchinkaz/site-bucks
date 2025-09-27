@@ -114,9 +114,16 @@ export async function getAllNews(): Promise<NewsArticle[]> {
 
 export async function createNews(newsData: Partial<NewsArticle>): Promise<NewsArticle> {
   try {
+    // Генерируем slug из заголовка если не указан
+    let slug = newsData.id
+    if (!slug && newsData.title) {
+      slug = generateSlug(newsData.title)
+    }
+
     const { data, error } = await supabase
       .from('news_articles')
       .insert([{
+        id: slug, // Используем slug как ID
         title: newsData.title,
         description: newsData.description,
         content: newsData.content,
@@ -144,21 +151,39 @@ export async function createNews(newsData: Partial<NewsArticle>): Promise<NewsAr
   }
 }
 
-export async function updateNews(id: string | number, updates: Partial<NewsArticle>): Promise<NewsArticle> {
+// Функция для генерации slug из заголовка
+function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^а-яА-Яa-zA-Z0-9\s]/g, '') // Удаляем спецсимволы
+    .replace(/\s+/g, '-') // Заменяем пробелы на дефисы
+    .replace(/^-+|-+$/g, '') // Удаляем дефисы в начале и конце
+    .replace(/-+/g, '-') // Заменяем множественные дефисы на одинарные
+}
+
+export async function updateNews(id: string, updates: Partial<NewsArticle>): Promise<NewsArticle> {
   try {
+    // Если обновляется заголовок, генерируем новый slug
+    let updateData: any = {
+      title: updates.title,
+      description: updates.description,
+      content: updates.content,
+      image: updates.image,
+      content_image: updates.contentImage,
+      content_sections: updates.contentSections,
+      published: updates.published,
+      show_on_homepage: updates.show_on_homepage,
+      updated_at: new Date().toISOString()
+    }
+
+    // Если заголовок изменился, обновляем slug
+    if (updates.title) {
+      updateData.id = generateSlug(updates.title)
+    }
+
     const { data, error } = await supabase
       .from('news_articles')
-      .update({
-        title: updates.title,
-        description: updates.description,
-        content: updates.content,
-        image: updates.image,
-        content_image: updates.contentImage,
-        content_sections: updates.contentSections,
-        published: updates.published,
-        show_on_homepage: updates.show_on_homepage,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single()
@@ -175,7 +200,7 @@ export async function updateNews(id: string | number, updates: Partial<NewsArtic
   }
 }
 
-export async function deleteNews(id: string | number): Promise<boolean> {
+export async function deleteNews(id: string): Promise<boolean> {
   try {
     const { error } = await supabase
       .from('news_articles')
@@ -213,7 +238,7 @@ export async function getHomepageNews(): Promise<NewsArticle[]> {
   }
 }
 
-export async function getNewsById(id: string | number): Promise<NewsArticle | null> {
+export async function getNewsById(id: string): Promise<NewsArticle | null> {
   try {
     const { data, error } = await supabase
       .from('news_articles')
@@ -341,7 +366,7 @@ export function formatNewsDate(dateString: string): string {
 }
 
 // Функция для получения новости с деталями
-export async function getNewsWithDetails(id: string | number) {
+export async function getNewsWithDetails(id: string) {
   const article = await getNewsById(id)
   if (!article) return null
 
