@@ -45,9 +45,23 @@ export default function AdminLayout({
       return
     }
 
+    // Если мы на странице логина, не проверяем аутентификацию
+    if (pathname === "/admin/login") {
+      console.log("🔐 On login page, skipping auth check")
+      setIsLoading(false)
+      return
+    }
+
     const checkAuth = async () => {
       try {
         console.log("🔐 Checking authentication for path:", pathname)
+        
+        // Дополнительная защита: если мы уже на странице логина, не проверяем
+        if (pathname === "/admin/login") {
+          console.log("🔐 Double check: on login page, aborting auth check")
+          return
+        }
+        
         // Проверяем токен в localStorage
         const token = localStorage.getItem("admin_token")
         console.log("🔐 Token found:", !!token, token !== "authenticated")
@@ -64,12 +78,14 @@ export default function AdminLayout({
             console.log("❌ Session validation failed, redirecting to login")
             localStorage.removeItem("admin_token")
             localStorage.removeItem("current_user")
+            console.log("🔄 PUSHING TO LOGIN - Session validation failed")
             router.push("/admin/login")
             return
           }
         } else {
           console.log("❌ No valid token found, redirecting to login")
           setAuthChecked(true)
+          console.log("🔄 PUSHING TO LOGIN - No valid token")
           router.push("/admin/login")
           return
         }
@@ -78,6 +94,7 @@ export default function AdminLayout({
         localStorage.removeItem("admin_token")
         localStorage.removeItem("current_user")
         setAuthChecked(true)
+        console.log("🔄 PUSHING TO LOGIN - Error in auth check")
         router.push("/admin/login")
         return
       } finally {
@@ -87,7 +104,7 @@ export default function AdminLayout({
 
     console.log("🔐 Starting auth check for path:", pathname)
     checkAuth()
-  }, [router, pathname])
+  }, [pathname])
 
   const handleLogout = async () => {
     try {
