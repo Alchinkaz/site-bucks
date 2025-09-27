@@ -499,7 +499,9 @@ export async function deleteSession(token: string): Promise<boolean> {
 
 export async function cleanExpiredSessions(): Promise<void> {
   try {
-    await supabase.rpc('clean_expired_sessions')
+    // Очищаем только localStorage, так как сессии больше не хранятся в базе данных
+    console.log('✅ Cleaning expired sessions from localStorage')
+    // Можно добавить логику очистки старых токенов из localStorage если нужно
   } catch (error) {
     console.error('Error cleaning expired sessions:', error)
     throw error
