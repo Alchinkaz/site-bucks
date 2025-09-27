@@ -23,18 +23,25 @@ export default function AdminLayout({
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
 
   useEffect(() => {
     document.documentElement.classList.add("dark")
   }, [])
 
   useEffect(() => {
-    console.log("🔐 Layout useEffect triggered for path:", pathname)
+    console.log("🔐 Layout useEffect triggered for path:", pathname, "authChecked:", authChecked)
     
     // Не проверяем авторизацию на странице логина
     if (pathname === "/admin/login") {
       console.log("🔐 On login page, skipping auth check")
       setIsLoading(false)
+      return
+    }
+
+    // Если уже проверили аутентификацию и пользователь авторизован, не проверяем снова
+    if (authChecked && isAuthenticated) {
+      console.log("🔐 Already authenticated, skipping auth check")
       return
     }
 
@@ -52,6 +59,7 @@ export default function AdminLayout({
             console.log("✅ User authenticated:", user.username)
             setCurrentUser(user)
             setIsAuthenticated(true)
+            setAuthChecked(true)
           } else {
             console.log("❌ Session validation failed, redirecting to login")
             localStorage.removeItem("admin_token")
@@ -61,6 +69,7 @@ export default function AdminLayout({
           }
         } else {
           console.log("❌ No valid token found, redirecting to login")
+          setAuthChecked(true)
           router.push("/admin/login")
           return
         }
@@ -68,6 +77,7 @@ export default function AdminLayout({
         console.error("❌ Error checking auth:", error)
         localStorage.removeItem("admin_token")
         localStorage.removeItem("current_user")
+        setAuthChecked(true)
         router.push("/admin/login")
         return
       } finally {
@@ -90,6 +100,9 @@ export default function AdminLayout({
     } finally {
       localStorage.removeItem("admin_token")
       localStorage.removeItem("current_user")
+      setAuthChecked(false)
+      setIsAuthenticated(false)
+      setCurrentUser(null)
       router.push("/admin/login")
     }
   }
