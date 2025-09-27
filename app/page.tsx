@@ -42,9 +42,11 @@ export default function Home() {
 
   const fetchCurrentRates = async (forceUpdate = false) => {
     try {
-      console.log(" Fetching currency rates, forceUpdate:", forceUpdate)
+      console.log("💰 Fetching currency rates, forceUpdate:", forceUpdate)
       const timestamp = Date.now()
       const url = `/api/currency-rates?t=${timestamp}${forceUpdate ? "&force=true" : ""}`
+      console.log("💰 API URL:", url)
+      
       const response = await fetch(url, {
         cache: "no-store",
         headers: {
@@ -53,9 +55,12 @@ export default function Home() {
           Expires: "0",
         },
       })
+      
+      console.log("💰 Response status:", response.status, response.ok)
+      
       if (response.ok) {
         const rates = await response.json()
-        console.log(" Received fresh rates:", rates)
+        console.log("💰 Received fresh rates:", rates)
 
         if (homepageData) {
           const updatedData = {
@@ -64,11 +69,15 @@ export default function Home() {
           }
           setHomepageData(updatedData)
           setLastUpdated(rates.lastUpdated)
-          console.log(" Currency rates updated successfully")
+          console.log("💰 Currency rates updated successfully in state")
+        } else {
+          console.log("💰 No homepageData available to update")
         }
+      } else {
+        console.error("💰 Failed to fetch currency rates, status:", response.status)
       }
     } catch (error) {
-      console.error("Ошибка при получении курсов валют:", error)
+      console.error("❌ Ошибка при получении курсов валют:", error)
     }
   }
 

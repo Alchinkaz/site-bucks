@@ -81,10 +81,12 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5 минут
 export async function getHomepageData(): Promise<HomepageData> {
   // Проверяем кэш
   if (homepageDataCache && Date.now() - cacheTimestamp < CACHE_DURATION) {
+    console.log('📋 Using cached homepage data')
     return homepageDataCache
   }
 
   try {
+    console.log('🔄 Fetching homepage data from Supabase...')
     const { data, error } = await supabase
       .from('homepage_data')
       .select('*')
@@ -93,15 +95,18 @@ export async function getHomepageData(): Promise<HomepageData> {
       .single()
 
     if (error) {
-      console.error('Error fetching homepage data:', error)
+      console.error('❌ Error fetching homepage data:', error)
       throw error
     }
 
     if (!data) {
+      console.error('❌ No homepage data found in database')
       throw new Error('No homepage data found')
     }
 
+    console.log('📊 Raw data from Supabase:', data)
     const transformedData = transformSupabaseToHomepageData(data)
+    console.log('🔄 Transformed data:', transformedData)
     
     // Обновляем кэш
     homepageDataCache = transformedData
@@ -109,9 +114,10 @@ export async function getHomepageData(): Promise<HomepageData> {
 
     return transformedData
   } catch (error) {
-    console.error('Error in getHomepageData:', error)
+    console.error('❌ Error in getHomepageData:', error)
     // Возвращаем кэшированные данные в случае ошибки
     if (homepageDataCache) {
+      console.log('📋 Using fallback cached data')
       return homepageDataCache
     }
     throw error
@@ -120,14 +126,21 @@ export async function getHomepageData(): Promise<HomepageData> {
 
 export async function updateHomepageData(updates: Partial<HomepageData>): Promise<HomepageData> {
   try {
+    console.log('🔄 Updating homepage data with updates:', updates)
+    
     // Получаем текущие данные
     const currentData = await getHomepageData()
+    console.log('📊 Current data loaded:', currentData)
+    
     const updatedData = { ...currentData, ...updates }
+    console.log('📝 Updated data prepared:', updatedData)
 
     // Преобразуем в формат Supabase
     const supabaseData = transformHomepageDataToSupabase(updatedData)
+    console.log('🔄 Transformed to Supabase format:', supabaseData)
 
     // Обновляем в базе данных
+    console.log('💾 Saving to Supabase...')
     const { data, error } = await supabase
       .from('homepage_data')
       .upsert(supabaseData)
@@ -135,11 +148,14 @@ export async function updateHomepageData(updates: Partial<HomepageData>): Promis
       .single()
 
     if (error) {
-      console.error('Error updating homepage data:', error)
+      console.error('❌ Error updating homepage data:', error)
       throw error
     }
 
+    console.log('✅ Data saved successfully:', data)
+
     const transformedData = transformSupabaseToHomepageData(data)
+    console.log('🔄 Transformed back to app format:', transformedData)
     
     // Обновляем кэш
     homepageDataCache = transformedData
@@ -154,9 +170,10 @@ export async function updateHomepageData(updates: Partial<HomepageData>): Promis
       )
     }
 
+    console.log('✅ Homepage data update completed successfully')
     return transformedData
   } catch (error) {
-    console.error('Error in updateHomepageData:', error)
+    console.error('❌ Error in updateHomepageData:', error)
     throw error
   }
 }
