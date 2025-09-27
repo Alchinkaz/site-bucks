@@ -11,13 +11,17 @@ export default function NewsPage() {
   useEffect(() => {
     const loadUser = () => {
       try {
+        console.log("📰 Loading user for news page")
         const userData = localStorage.getItem("current_user")
         if (userData) {
           const user = JSON.parse(userData)
+          console.log("📰 User loaded:", user)
           setCurrentUser(user)
+        } else {
+          console.log("📰 No user data found in localStorage")
         }
       } catch (error) {
-        console.error("Error loading user:", error)
+        console.error("❌ Error loading user:", error)
       } finally {
         setIsLoading(false)
       }
@@ -48,7 +52,18 @@ export default function NewsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Загрузка...</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Загрузка новостей...</h1>
+        </div>
+      </div>
+    )
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Ошибка авторизации</h1>
+          <p className="text-muted-foreground">Пользователь не найден</p>
         </div>
       </div>
     )

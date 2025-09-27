@@ -31,25 +31,32 @@ export default function AdminLayout({
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        console.log("🔐 Checking authentication for path:", pathname)
         // Проверяем токен в localStorage
         const token = localStorage.getItem("admin_token")
+        console.log("🔐 Token found:", !!token, token !== "authenticated")
+        
         if (token && token !== "authenticated") {
+          console.log("🔐 Validating session...")
           const user = await AdminService.validateSession(token)
           if (user) {
+            console.log("✅ User authenticated:", user.username)
             setCurrentUser(user)
             setIsAuthenticated(true)
           } else {
+            console.log("❌ Session validation failed, redirecting to login")
             localStorage.removeItem("admin_token")
             localStorage.removeItem("current_user")
             router.push("/admin/login")
             return
           }
         } else {
+          console.log("❌ No valid token found, redirecting to login")
           router.push("/admin/login")
           return
         }
       } catch (error) {
-        console.error("Error checking auth:", error)
+        console.error("❌ Error checking auth:", error)
         localStorage.removeItem("admin_token")
         localStorage.removeItem("current_user")
         router.push("/admin/login")
@@ -61,6 +68,7 @@ export default function AdminLayout({
 
     // Не проверяем авторизацию на странице логина
     if (pathname === "/admin/login") {
+      console.log("🔐 On login page, skipping auth check")
       setIsLoading(false)
       return
     }
