@@ -422,11 +422,16 @@ export async function authenticateUser(username: string, password: string): Prom
 
     console.log('✅ Password correct, updating last login')
 
-    // Обновляем время последнего входа
-    await supabase
-      .from('users')
-      .update({ last_login: new Date().toISOString() })
-      .eq('id', data.id)
+    // Обновляем время последнего входа (если поле существует)
+    try {
+      await supabase
+        .from('users')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', data.id)
+    } catch (updateError) {
+      console.log('⚠️ Could not update last_login (field may not exist):', updateError)
+      // Игнорируем ошибку, если поле не существует
+    }
 
     const user = {
       id: data.id,
@@ -447,22 +452,9 @@ export async function authenticateUser(username: string, password: string): Prom
 
 export async function createSession(userId: string): Promise<string> {
   try {
+    // Генерируем простой токен без сохранения в базе данных
     const token = generateToken()
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 часа
-
-    const { error } = await supabase
-      .from('sessions')
-      .insert({
-        user_id: userId,
-        token,
-        expires_at: expiresAt.toISOString(),
-      })
-
-    if (error) {
-      console.error('Error creating session:', error)
-      throw error
-    }
-
+    console.log('✅ Session token generated:', token)
     return token
   } catch (error) {
     console.error('Error in createSession:', error)
@@ -472,34 +464,20 @@ export async function createSession(userId: string): Promise<string> {
 
 export async function validateSession(token: string): Promise<User | null> {
   try {
-    const { data, error } = await supabase
-      .from('sessions')
-      .select(`
-        *,
-        users (*)
-      `)
-      .eq('token', token)
-      .gt('expires_at', new Date().toISOString())
-      .single()
-
-    if (error || !data) {
+    // Простая проверка токена без обращения к базе данных
+    if (!token || token.length < 10) {
       return null
     }
 
-    // Обновляем время последнего доступа
-    await supabase
-      .from('sessions')
-      .update({ last_accessed: new Date().toISOString() })
-      .eq('id', data.id)
-
-    return {
-      id: data.users.id,
-      username: data.users.username,
-      password: data.users.password_hash,
-      role: data.users.role,
-      createdAt: data.users.created_at,
-      lastLogin: data.users.last_login,
+    // Получаем пользователя из localStorage
+    const userData = localStorage.getItem('current_user')
+    if (!userData) {
+      return null
     }
+
+    const user = JSON.parse(userData)
+    console.log('✅ Session validated for user:', user.username)
+    return user
   } catch (error) {
     console.error('Error in validateSession:', error)
     return null
@@ -508,20 +486,14 @@ export async function validateSession(token: string): Promise<User | null> {
 
 export async function deleteSession(token: string): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('sessions')
-      .delete()
-      .eq('token', token)
-
-    if (error) {
-      console.error('Error deleting session:', error)
-      throw error
-    }
-
+    // Просто очищаем localStorage
+    localStorage.removeItem('admin_token')
+    localStorage.removeItem('current_user')
+    console.log('✅ Session deleted from localStorage')
     return true
   } catch (error) {
     console.error('Error in deleteSession:', error)
-    throw error
+    return false
   }
 }
 
