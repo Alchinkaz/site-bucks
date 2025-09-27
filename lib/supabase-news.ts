@@ -125,6 +125,7 @@ export async function createNews(newsData: Partial<NewsArticle>): Promise<NewsAr
         content_sections: newsData.contentSections,
         published: newsData.published || false,
         show_on_homepage: newsData.show_on_homepage || false,
+        created_by: (await supabase.auth.getUser()).data.user?.id || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }])
@@ -143,7 +144,7 @@ export async function createNews(newsData: Partial<NewsArticle>): Promise<NewsAr
   }
 }
 
-export async function updateNews(id: string, updates: Partial<NewsArticle>): Promise<NewsArticle> {
+export async function updateNews(id: string | number, updates: Partial<NewsArticle>): Promise<NewsArticle> {
   try {
     const { data, error } = await supabase
       .from('news_articles')
@@ -174,7 +175,7 @@ export async function updateNews(id: string, updates: Partial<NewsArticle>): Pro
   }
 }
 
-export async function deleteNews(id: string): Promise<boolean> {
+export async function deleteNews(id: string | number): Promise<boolean> {
   try {
     const { error } = await supabase
       .from('news_articles')
@@ -212,7 +213,7 @@ export async function getHomepageNews(): Promise<NewsArticle[]> {
   }
 }
 
-export async function getNewsById(id: string): Promise<NewsArticle | null> {
+export async function getNewsById(id: string | number): Promise<NewsArticle | null> {
   try {
     const { data, error } = await supabase
       .from('news_articles')
@@ -340,7 +341,7 @@ export function formatNewsDate(dateString: string): string {
 }
 
 // Функция для получения новости с деталями
-export async function getNewsWithDetails(id: string) {
+export async function getNewsWithDetails(id: string | number) {
   const article = await getNewsById(id)
   if (!article) return null
 
