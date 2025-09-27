@@ -25,22 +25,30 @@ export default function LoginPage() {
     setError("")
 
     try {
+      console.log('🔐 Login attempt:', { username, password: '***' })
+      
       const user = await AdminService.authenticateUser(username, password)
+      console.log('🔐 Authentication result:', user)
 
       if (user) {
+        console.log('✅ User authenticated, creating session...')
+        
         // Создаем сессию
         const token = await AdminService.createSession(user.id)
+        console.log('✅ Session created:', token)
         
         // Сохраняем токен и данные пользователя в localStorage
         localStorage.setItem("admin_token", token)
         localStorage.setItem("current_user", JSON.stringify(user))
 
+        console.log('✅ Redirecting to admin panel...')
         router.push("/admin")
       } else {
+        console.log('❌ Authentication failed')
         setError("Неверный логин или пароль")
       }
     } catch (error) {
-      console.error("Login error:", error)
+      console.error("❌ Login error:", error)
       setError("Ошибка при входе в систему")
     }
 

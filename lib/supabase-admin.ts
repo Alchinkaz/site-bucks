@@ -388,6 +388,8 @@ export async function deleteProject(id: string): Promise<boolean> {
 
 export async function authenticateUser(username: string, password: string): Promise<User | null> {
   try {
+    console.log('🔐 Attempting to authenticate user:', username)
+    
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -395,14 +397,30 @@ export async function authenticateUser(username: string, password: string): Prom
       .single()
 
     if (error) {
-      console.error('Error authenticating user:', error)
+      console.error('❌ Error authenticating user:', error)
+      console.error('Error details:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      })
       return null
     }
 
+    console.log('✅ User found:', {
+      id: data.id,
+      username: data.username,
+      role: data.role,
+      hasPassword: !!data.password_hash
+    })
+
     // В реальном проекте используйте bcrypt для проверки пароля
     if (data.password_hash !== password) {
+      console.log('❌ Password mismatch')
       return null
     }
+
+    console.log('✅ Password correct, updating last login')
 
     // Обновляем время последнего входа
     await supabase
@@ -410,7 +428,7 @@ export async function authenticateUser(username: string, password: string): Prom
       .update({ last_login: new Date().toISOString() })
       .eq('id', data.id)
 
-    return {
+    const user = {
       id: data.id,
       username: data.username,
       password: data.password_hash,
@@ -418,8 +436,11 @@ export async function authenticateUser(username: string, password: string): Prom
       createdAt: data.created_at,
       lastLogin: data.last_login,
     }
+
+    console.log('✅ Authentication successful:', user)
+    return user
   } catch (error) {
-    console.error('Error in authenticateUser:', error)
+    console.error('❌ Error in authenticateUser:', error)
     return null
   }
 }
