@@ -25,15 +25,20 @@ export function NewsManagement({ currentUser, formatDate }: NewsManagementProps)
   useEffect(() => {
     const checkAuth = () => {
       try {
+        console.log("📰 NewsManagement: Checking auth...")
         const token = localStorage.getItem("admin_token")
         const userData = localStorage.getItem("current_user")
 
-        if (!token || token !== "authenticated" || !userData) {
+        console.log("📰 NewsManagement: Token:", !!token, "UserData:", !!userData)
+
+        if (!token || !userData) {
+          console.log("📰 NewsManagement: Auth failed, redirecting to login")
           router.push("/admin/login")
           return
         }
+        console.log("📰 NewsManagement: Auth successful")
       } catch (error) {
-        console.error("Error checking auth:", error)
+        console.error("📰 NewsManagement: Error checking auth:", error)
         router.push("/admin/login")
         return
       }
