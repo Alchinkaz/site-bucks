@@ -3,16 +3,25 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import PageLoader from "@/components/ui/page-loader"
-import { AdminStorage } from "@/lib/admin-storage"
+import * as AdminService from "@/lib/supabase-admin"
 
 export default function AdminLoading() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       try {
-        if (!AdminStorage.isAuthenticated()) {
+        const token = localStorage.getItem("admin_token")
+        if (!token || token === "authenticated") {
+          router.push("/admin/login")
+          return
+        }
+
+        const user = await AdminService.validateSession(token)
+        if (!user) {
+          localStorage.removeItem("admin_token")
+          localStorage.removeItem("current_user")
           router.push("/admin/login")
           return
         }
@@ -22,6 +31,8 @@ export default function AdminLoading() {
         }, 1500)
       } catch (error) {
         console.error("Error checking auth:", error)
+        localStorage.removeItem("admin_token")
+        localStorage.removeItem("current_user")
         router.push("/admin/login")
         return
       }

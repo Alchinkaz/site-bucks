@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { User, Eye, EyeOff, Lock } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { AdminStorage } from "@/lib/admin-storage"
+import * as AdminService from "@/lib/supabase-admin"
 
 export default function LoginPage() {
   const [username, setUsername] = useState("")
@@ -25,15 +25,15 @@ export default function LoginPage() {
     setError("")
 
     try {
-      const users = AdminStorage.getUsers()
-      const user = users.find((u) => u.username === username)
+      const user = await AdminService.authenticateUser(username, password)
 
-      if (user && user.password === password) {
-        // Обновляем время последнего входа
-        AdminStorage.updateUser(user.id, { lastLogin: new Date().toISOString() })
-
-        // Сохраняем данные пользователя в localStorage для сессии
-        AdminStorage.setCurrentUser(user)
+      if (user) {
+        // Создаем сессию
+        const token = await AdminService.createSession(user.id)
+        
+        // Сохраняем токен и данные пользователя в localStorage
+        localStorage.setItem("admin_token", token)
+        localStorage.setItem("current_user", JSON.stringify(user))
 
         router.push("/admin")
       } else {

@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AdminStorage, type User } from "@/lib/admin-storage"
+import * as AdminService from "@/lib/supabase-admin"
+import type { User } from "@/lib/admin-storage"
 import { Eye, EyeOff } from "lucide-react"
 
 export default function ProfilePage() {
@@ -32,8 +33,11 @@ export default function ProfilePage() {
   useEffect(() => {
     const loadUser = () => {
       try {
-        const user = AdminStorage.getCurrentUser()
-        setCurrentUser(user)
+        const userData = localStorage.getItem("current_user")
+        if (userData) {
+          const user = JSON.parse(userData)
+          setCurrentUser(user)
+        }
       } catch (error) {
         console.error("Error loading user:", error)
       } finally {
@@ -51,12 +55,6 @@ export default function ProfilePage() {
 
     if (!currentUser) return
 
-    // Validate current password
-    if (passwordData.currentPassword !== currentUser.password) {
-      setError("Неверный текущий пароль")
-      return
-    }
-
     // Validate new password
     if (passwordData.newPassword.length < 6) {
       setError("Новый пароль должен содержать минимум 6 символов")
@@ -70,14 +68,14 @@ export default function ProfilePage() {
     }
 
     try {
-      // Update password
-      const updatedUser = AdminStorage.updateUser(currentUser.id, {
-        password: passwordData.newPassword,
-      })
+      // Update password in Supabase
+      const success = await AdminService.updateUserPassword(
+        currentUser.id,
+        passwordData.currentPassword,
+        passwordData.newPassword
+      )
 
-      if (updatedUser) {
-        setCurrentUser(updatedUser)
-        AdminStorage.setCurrentUser(updatedUser)
+      if (success) {
         setMessage("Пароль успешно изменен")
         setPasswordData({
           currentPassword: "",
@@ -85,8 +83,11 @@ export default function ProfilePage() {
           confirmPassword: "",
         })
         setIsChangingPassword(false)
+      } else {
+        setError("Неверный текущий пароль")
       }
     } catch (error) {
+      console.error("Password change error:", error)
       setError("Ошибка при изменении пароля")
     }
   }

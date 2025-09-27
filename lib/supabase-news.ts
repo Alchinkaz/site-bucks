@@ -93,6 +93,106 @@ export async function getPublishedNews(): Promise<NewsArticle[]> {
   }
 }
 
+export async function getAllNews(): Promise<NewsArticle[]> {
+  try {
+    const { data, error } = await supabase
+      .from('news_articles')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching all news:', error)
+      throw error
+    }
+
+    return data.map(transformSupabaseToNewsArticle)
+  } catch (error) {
+    console.error('Error in getAllNews:', error)
+    throw error
+  }
+}
+
+export async function createNews(newsData: Partial<NewsArticle>): Promise<NewsArticle> {
+  try {
+    const { data, error } = await supabase
+      .from('news_articles')
+      .insert([{
+        title: newsData.title,
+        description: newsData.description,
+        content: newsData.content,
+        image: newsData.image,
+        content_image: newsData.contentImage,
+        content_sections: newsData.contentSections,
+        published: newsData.published || false,
+        show_on_homepage: newsData.show_on_homepage || false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }])
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error creating news:', error)
+      throw error
+    }
+
+    return transformSupabaseToNewsArticle(data)
+  } catch (error) {
+    console.error('Error in createNews:', error)
+    throw error
+  }
+}
+
+export async function updateNews(id: string, updates: Partial<NewsArticle>): Promise<NewsArticle> {
+  try {
+    const { data, error } = await supabase
+      .from('news_articles')
+      .update({
+        title: updates.title,
+        description: updates.description,
+        content: updates.content,
+        image: updates.image,
+        content_image: updates.contentImage,
+        content_sections: updates.contentSections,
+        published: updates.published,
+        show_on_homepage: updates.show_on_homepage,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error updating news:', error)
+      throw error
+    }
+
+    return transformSupabaseToNewsArticle(data)
+  } catch (error) {
+    console.error('Error in updateNews:', error)
+    throw error
+  }
+}
+
+export async function deleteNews(id: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('news_articles')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('Error deleting news:', error)
+      throw error
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error in deleteNews:', error)
+    throw error
+  }
+}
+
 export async function getHomepageNews(): Promise<NewsArticle[]> {
   try {
     const { data, error } = await supabase

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { AdminStorage, type User } from "@/lib/admin-storage"
+import type { User } from "@/lib/admin-storage"
 import { NewsManagement } from "@/components/admin/news-management"
 
 export default function NewsPage() {
@@ -11,8 +11,11 @@ export default function NewsPage() {
   useEffect(() => {
     const loadUser = () => {
       try {
-        const user = AdminStorage.getCurrentUser()
-        setCurrentUser(user)
+        const userData = localStorage.getItem("current_user")
+        if (userData) {
+          const user = JSON.parse(userData)
+          setCurrentUser(user)
+        }
       } catch (error) {
         console.error("Error loading user:", error)
       } finally {

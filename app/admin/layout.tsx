@@ -8,7 +8,8 @@ import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { BarChart3, SettingsIcon, LogOut, Menu, X, FileText, Phone, Home } from "lucide-react"
-import { AdminStorage, type User } from "@/lib/admin-storage"
+import * as AdminService from "@/lib/supabase-admin"
+import type { User } from "@/lib/admin-storage"
 import Link from "next/link"
 
 export default function AdminLayout({
@@ -28,14 +29,18 @@ export default function AdminLayout({
   }, [])
 
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       try {
-        if (AdminStorage.isAuthenticated()) {
-          const user = AdminStorage.getCurrentUser()
+        // Проверяем токен в localStorage
+        const token = localStorage.getItem("admin_token")
+        if (token && token !== "authenticated") {
+          const user = await AdminService.validateSession(token)
           if (user) {
             setCurrentUser(user)
             setIsAuthenticated(true)
           } else {
+            localStorage.removeItem("admin_token")
+            localStorage.removeItem("current_user")
             router.push("/admin/login")
             return
           }
@@ -45,6 +50,8 @@ export default function AdminLayout({
         }
       } catch (error) {
         console.error("Error checking auth:", error)
+        localStorage.removeItem("admin_token")
+        localStorage.removeItem("current_user")
         router.push("/admin/login")
         return
       } finally {
@@ -61,9 +68,19 @@ export default function AdminLayout({
     checkAuth()
   }, [router, pathname])
 
-  const handleLogout = () => {
-    AdminStorage.logout()
-    router.push("/admin/login")
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("admin_token")
+      if (token && token !== "authenticated") {
+        await AdminService.deleteSession(token)
+      }
+    } catch (error) {
+      console.error("Error during logout:", error)
+    } finally {
+      localStorage.removeItem("admin_token")
+      localStorage.removeItem("current_user")
+      router.push("/admin/login")
+    }
   }
 
   const getAvailableTabs = (user: User) => {

@@ -7,40 +7,38 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Save } from "lucide-react"
-import { type ContactsData, getContactsData, saveContactsData } from "@/lib/contacts-data"
+import { type ContactsData, getContactsData, saveContactsData } from "@/lib/supabase-contacts"
 
 export default function AdminContactsPage() {
-  const [contactsData, setContactsData] = useState<ContactsData>({
-    phone: "",
-    email: "",
-    address: "",
-    workingHours: {
-      weekdays: "",
-      saturday: "",
-      sunday: "",
-    },
-    whatsappNumbers: {
-      primary: "",
-    },
-    mapIframe: "",
-    gisLink: "",
-    gisButtonText: "",
-  })
-
+  const [contactsData, setContactsData] = useState<ContactsData | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState("")
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const data = getContactsData()
-    setContactsData(data)
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        const data = await getContactsData()
+        setContactsData(data)
+      } catch (error) {
+        console.error("Error loading contacts data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
   }, [])
 
   const handleSave = async () => {
+    if (!contactsData) return
+    
     setIsSaving(true)
     setSaveMessage("")
 
     try {
-      saveContactsData(contactsData)
+      await saveContactsData(contactsData)
       setSaveMessage("Контактные данные успешно сохранены!")
       setTimeout(() => setSaveMessage(""), 3000)
     } catch (error) {
@@ -52,30 +50,47 @@ export default function AdminContactsPage() {
   }
 
   const updateField = (field: string, value: string) => {
-    setContactsData((prev) => ({
-      ...prev,
-      [field]: value,
-    }))
+    if (contactsData) {
+      setContactsData((prev) => prev ? ({
+        ...prev,
+        [field]: value,
+      }) : null)
+    }
   }
 
   const updateWorkingHours = (day: string, value: string) => {
-    setContactsData((prev) => ({
-      ...prev,
-      workingHours: {
-        ...prev.workingHours,
-        [day]: value,
-      },
-    }))
+    if (contactsData) {
+      setContactsData((prev) => prev ? ({
+        ...prev,
+        workingHours: {
+          ...prev.workingHours,
+          [day]: value,
+        },
+      }) : null)
+    }
   }
 
   const updateWhatsApp = (type: "primary" | "secondary", value: string) => {
-    setContactsData((prev) => ({
-      ...prev,
-      whatsappNumbers: {
-        ...prev.whatsappNumbers,
-        [type]: value,
-      },
-    }))
+    if (contactsData) {
+      setContactsData((prev) => prev ? ({
+        ...prev,
+        whatsappNumbers: {
+          ...prev.whatsappNumbers,
+          [type]: value,
+        },
+      }) : null)
+    }
+  }
+
+  if (loading || !contactsData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#0a0a0a" }}>
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white">Загрузка...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

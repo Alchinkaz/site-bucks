@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Edit3, Trash2, FileText } from "lucide-react"
-import { AdminStorage, type NewsArticle } from "@/lib/admin-storage"
+import * as NewsService from "@/lib/supabase-news"
+import type { NewsArticle } from "@/lib/admin-storage"
 import { NewsEditForm } from "./news-edit-form"
 
 interface NewsManagementProps {
@@ -46,9 +47,13 @@ export function NewsManagement({ currentUser, formatDate }: NewsManagementProps)
     loadArticles()
   }, [])
 
-  const loadArticles = () => {
-    const articlesData = AdminStorage.getNewsArticles()
-    setArticles(articlesData)
+  const loadArticles = async () => {
+    try {
+      const articlesData = await NewsService.getAllNews()
+      setArticles(articlesData)
+    } catch (error) {
+      console.error("Error loading articles:", error)
+    }
   }
 
   const handleAddArticle = () => {
@@ -107,14 +112,13 @@ export function NewsManagement({ currentUser, formatDate }: NewsManagementProps)
     setShowAddForm(false)
   }
 
-  const handleSaveArticle = (articleData: any) => {
+  const handleSaveArticle = async (articleData: any) => {
     console.log("Saving article:", articleData)
 
     try {
       if (showAddForm) {
         // Создание новой статьи
-        const newArticle: NewsArticle = {
-          id: articleData.id,
+        const newArticle = {
           title: articleData.title,
           description: articleData.description,
           content: articleData.content,
@@ -123,15 +127,13 @@ export function NewsManagement({ currentUser, formatDate }: NewsManagementProps)
           contentSections: articleData.contentSections,
           published: articleData.published,
           show_on_homepage: articleData.show_on_homepage,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
         }
 
-        AdminStorage.addNewsArticle(newArticle)
+        await NewsService.createNews(newArticle)
         console.log("Article added successfully")
       } else {
         // Обновление существующей статьи
-        const updates: Partial<NewsArticle> = {
+        const updates = {
           title: articleData.title,
           description: articleData.description,
           content: articleData.content,
@@ -142,11 +144,11 @@ export function NewsManagement({ currentUser, formatDate }: NewsManagementProps)
           show_on_homepage: articleData.show_on_homepage,
         }
 
-        AdminStorage.updateNewsArticle(articleData.id, updates)
+        await NewsService.updateNews(articleData.id, updates)
         console.log("Article updated successfully")
       }
 
-      loadArticles()
+      await loadArticles()
       setEditingArticle(null)
       setShowAddForm(false)
     } catch (error) {
@@ -155,10 +157,15 @@ export function NewsManagement({ currentUser, formatDate }: NewsManagementProps)
     }
   }
 
-  const handleDeleteArticle = (id: string) => {
+  const handleDeleteArticle = async (id: string) => {
     if (confirm("Вы уверены, что хотите удалить эту новость?")) {
-      AdminStorage.deleteNewsArticle(id)
-      loadArticles()
+      try {
+        await NewsService.deleteNews(id)
+        await loadArticles()
+      } catch (error) {
+        console.error("Error deleting article:", error)
+        alert("Ошибка при удалении статьи")
+      }
     }
   }
 

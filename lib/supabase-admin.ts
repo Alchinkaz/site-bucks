@@ -96,6 +96,39 @@ export async function updateUser(id: string, updates: Partial<User>): Promise<Us
   }
 }
 
+export async function updateUserPassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<boolean> {
+  try {
+    // Сначала проверяем текущий пароль
+    const user = await getUserById(userId)
+    if (!user || user.password !== currentPassword) {
+      return false
+    }
+
+    // Обновляем пароль
+    const { error } = await supabase
+      .from('users')
+      .update({ 
+        password_hash: newPassword,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+
+    if (error) {
+      console.error('Error updating password:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error in updateUserPassword:', error)
+    return false
+  }
+}
+
 export async function deleteUser(id: string): Promise<boolean> {
   try {
     const { error } = await supabase

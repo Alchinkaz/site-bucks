@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { RefreshCw, Clock, Globe } from "lucide-react"
-import { getHomepageData, updateHomepageData, type CurrencyRate } from "@/lib/homepage-data"
+import { getHomepageData, updateHomepageData, type CurrencyRate } from "@/lib/supabase-homepage"
 
 export default function CurrencyManagement() {
   const [currencyRates, setCurrencyRates] = useState<CurrencyRate[]>([])
@@ -14,10 +14,10 @@ export default function CurrencyManagement() {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
 
   useEffect(() => {
-    const loadData = () => {
+    const loadData = async () => {
       try {
         console.log("Admin loading currency data")
-        const data = getHomepageData()
+        const data = await getHomepageData()
         setCurrencyRates(data.currencyRates || [])
         console.log("Admin loaded rates:", data.currencyRates)
       } catch (error) {
@@ -28,19 +28,6 @@ export default function CurrencyManagement() {
     }
 
     loadData()
-
-    const handleDataUpdate = (event: CustomEvent) => {
-      console.log("Admin received data update event")
-      if (event.detail.currencyRates) {
-        setCurrencyRates(event.detail.currencyRates)
-      }
-    }
-
-    window.addEventListener("homepage-data-updated", handleDataUpdate as EventListener)
-
-    return () => {
-      window.removeEventListener("homepage-data-updated", handleDataUpdate as EventListener)
-    }
   }, [])
 
   const handleUpdateRates = async () => {
@@ -63,14 +50,8 @@ export default function CurrencyManagement() {
         setCurrencyRates(data.rates)
         setLastUpdated(data.lastUpdated)
 
-        const updatedData = updateHomepageData({ currencyRates: data.rates })
+        await updateHomepageData({ currencyRates: data.rates })
         console.log("Homepage data updated from admin panel")
-
-        window.dispatchEvent(
-          new CustomEvent("admin-currency-updated", {
-            detail: { rates: data.rates, timestamp: Date.now() },
-          }),
-        )
       } else {
         console.error("Failed to update rates:", data.error)
       }
