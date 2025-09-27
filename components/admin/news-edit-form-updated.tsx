@@ -55,15 +55,20 @@ export function NewsEditForm({ article, onSave, onCancel }: NewsEditFormProps) {
   useEffect(() => {
     const checkAuth = () => {
       try {
+        console.log("📝 NewsEditFormUpdated: Checking auth...")
         const token = localStorage.getItem("admin_token")
         const userData = localStorage.getItem("current_user")
 
-        if (!token || token !== "authenticated" || !userData) {
+        console.log("📝 NewsEditFormUpdated: Token:", !!token, "UserData:", !!userData)
+
+        if (!token || !userData) {
+          console.log("📝 NewsEditFormUpdated: Auth failed, redirecting to login")
           router.push("/admin/login")
           return
         }
+        console.log("📝 NewsEditFormUpdated: Auth successful")
       } catch (error) {
-        console.error("Error checking auth:", error)
+        console.error("📝 NewsEditFormUpdated: Error checking auth:", error)
         router.push("/admin/login")
         return
       }
