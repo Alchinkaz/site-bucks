@@ -102,29 +102,45 @@ export async function updateUserPassword(
   newPassword: string
 ): Promise<boolean> {
   try {
-    // Сначала проверяем текущий пароль
-    const user = await getUserById(userId)
-    if (!user || user.password !== currentPassword) {
+    console.log('🔐 Updating password for user:', userId)
+    
+    // Сначала получаем пользователя из базы данных напрямую
+    const { data: userData, error: fetchError } = await supabase
+      .from('users')
+      .select('password_hash')
+      .eq('id', userId)
+      .single()
+
+    if (fetchError || !userData) {
+      console.error('❌ Error fetching user:', fetchError)
       return false
     }
+
+    // Проверяем текущий пароль
+    if (userData.password_hash !== currentPassword) {
+      console.log('❌ Current password mismatch. Expected:', userData.password_hash, 'Got:', currentPassword)
+      return false
+    }
+
+    console.log('✅ Current password verified, updating to new password')
 
     // Обновляем пароль
     const { error } = await supabase
       .from('users')
       .update({ 
-        password_hash: newPassword,
-        updated_at: new Date().toISOString()
+        password_hash: newPassword
       })
       .eq('id', userId)
 
     if (error) {
-      console.error('Error updating password:', error)
+      console.error('❌ Error updating password:', error)
       return false
     }
 
+    console.log('✅ Password updated successfully')
     return true
   } catch (error) {
-    console.error('Error in updateUserPassword:', error)
+    console.error('❌ Error in updateUserPassword:', error)
     return false
   }
 }

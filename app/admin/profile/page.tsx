@@ -92,23 +92,6 @@ export default function ProfilePage() {
     }
   }
 
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString)
-      if (isNaN(date.getTime())) {
-        return "Дата не указана"
-      }
-      return date.toLocaleString("ru-RU", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    } catch (error) {
-      return "Дата не указана"
-    }
-  }
 
   if (isLoading) {
     return (
@@ -143,9 +126,6 @@ export default function ProfilePage() {
             <div>
               <h3 className="text-lg font-semibold text-foreground">{currentUser?.username}</h3>
               <p className="text-muted-foreground">Администратор</p>
-              <p className="text-sm text-muted-foreground">
-                Последний вход: {currentUser?.lastLogin ? formatDate(currentUser.lastLogin) : "Никогда"}
-              </p>
             </div>
           </div>
         </CardContent>
