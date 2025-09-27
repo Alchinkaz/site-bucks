@@ -29,6 +29,15 @@ export default function AdminLayout({
   }, [])
 
   useEffect(() => {
+    console.log("🔐 Layout useEffect triggered for path:", pathname)
+    
+    // Не проверяем авторизацию на странице логина
+    if (pathname === "/admin/login") {
+      console.log("🔐 On login page, skipping auth check")
+      setIsLoading(false)
+      return
+    }
+
     const checkAuth = async () => {
       try {
         console.log("🔐 Checking authentication for path:", pathname)
@@ -66,13 +75,7 @@ export default function AdminLayout({
       }
     }
 
-    // Не проверяем авторизацию на странице логина
-    if (pathname === "/admin/login") {
-      console.log("🔐 On login page, skipping auth check")
-      setIsLoading(false)
-      return
-    }
-
+    console.log("🔐 Starting auth check for path:", pathname)
     checkAuth()
   }, [router, pathname])
 
@@ -115,6 +118,7 @@ export default function AdminLayout({
 
   // Если не авторизован и не на странице логина, показываем загрузку (редирект произойдет)
   if (!isAuthenticated && pathname !== "/admin/login") {
+    console.log("🔐 Not authenticated, showing redirect screen. isAuthenticated:", isAuthenticated, "pathname:", pathname)
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -131,6 +135,8 @@ export default function AdminLayout({
   }
 
   const availableTabs = getAvailableTabs(currentUser!)
+
+  console.log("🔐 Layout rendering. isAuthenticated:", isAuthenticated, "currentUser:", !!currentUser, "pathname:", pathname)
 
   return (
     <div className="min-h-screen bg-background">
