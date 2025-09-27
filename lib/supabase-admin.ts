@@ -392,7 +392,6 @@ export async function authenticateUser(username: string, password: string): Prom
       .from('users')
       .select('*')
       .eq('username', username)
-      .eq('is_active', true)
       .single()
 
     if (error) {
