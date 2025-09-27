@@ -255,7 +255,7 @@ export default function Home() {
               </div>
 
               {/* Right side - Currency Exchange Widget */}
-              <div className="w-full lg:w-96 flex-shrink-0">
+              <div className="hidden lg:block w-full lg:w-96 flex-shrink-0">
                 <div
                   className="rounded-2xl shadow-xl border overflow-hidden"
                   style={{ backgroundColor: "#0f0f10", borderColor: "#27282d" }}
