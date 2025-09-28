@@ -603,12 +603,16 @@ export default function Home() {
                 className="rounded-3xl p-8 shadow-xl border border-gray-700 flex flex-col h-[360px]"
                 style={{ backgroundColor: "#141415" }}
               >
-                {/* Large Logo - moved to top left */}
-                <div className="flex justify-start">
+                {/* Large Logo with text */}
+                <div className="flex items-center space-x-4">
                   <Logo className="w-16 h-16" />
+                  <div className="flex flex-col">
+                    <h3 className="text-2xl font-bold text-white">Bucks</h3>
+                    <p className="text-gray-300 text-sm">Обмен ветхих валют</p>
+                  </div>
                 </div>
 
-                <div className="h-8"></div>
+                <div className="h-6"></div>
 
                 <div className="space-y-4">
                   <div className="flex items-center space-x-4">
