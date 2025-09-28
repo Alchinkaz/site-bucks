@@ -8,6 +8,7 @@ import Image from "next/image"
 import Navbar from "@/components/navbar"
 import BookingForm from "@/components/booking-form"
 import MapComponent from "@/components/map-component" // Import the new MapComponent
+import Logo from "@/components/logo"
 import { useState, useEffect } from "react"
 import { getHomepageNews } from "@/lib/supabase-news"
 import { getHomepageData, type HomepageData } from "@/lib/supabase-homepage"
@@ -604,7 +605,7 @@ export default function Home() {
               >
                 {/* Large Logo - moved to top left */}
                 <div className="flex justify-start">
-                  <div className="w-16 h-16 bg-gray-500 rounded" />
+                  <Logo className="w-16 h-16" />
                 </div>
 
                 <div className="h-8"></div>

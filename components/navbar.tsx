@@ -6,6 +6,7 @@ import { useState } from "react"
 import { X } from "lucide-react"
 // Modal lives in the same folder as the navbar, so use a relative import
 import ContactModal from "./contact-modal"
+import Logo from "./logo"
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -51,7 +52,7 @@ export default function Navbar() {
 
               <div className="lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2 flex-shrink-0">
                 <a href="#" onClick={handleLogoClick} className="flex items-center">
-                  <div className="w-10 h-10 bg-gray-500 rounded" />
+                  <Logo className="h-10 w-10" />
                 </a>
               </div>
 
