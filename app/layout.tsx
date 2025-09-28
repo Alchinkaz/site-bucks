@@ -10,6 +10,17 @@ export const metadata: Metadata = {
   keywords:
     "обмен валют Астана, ветхие банкноты, поврежденные доллары, обмен евро, курс валют, валютный обмен, damaged currency exchange, старые банкноты",
   generator: "Bucks",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32", type: "image/x-icon" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon.png", sizes: "192x192", type: "image/png" }
+    ],
+    shortcut: "/favicon.ico",
+    apple: [
+      { url: "/icon.png", sizes: "180x180", type: "image/png" }
+    ],
+  },
   openGraph: {
     title: "Bucks - Обмен ветхой валюты в Астане",
     description: "Обмен поврежденных и ветхих банкнот в Астане. Принимаем доллары, евро, фунты с дефектами.",
