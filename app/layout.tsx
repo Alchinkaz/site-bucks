@@ -12,11 +12,12 @@ export const metadata: Metadata = {
   generator: "Bucks",
   icons: {
     icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
       { url: "/bucks-logo.png", sizes: "32x32", type: "image/png" },
       { url: "/bucks-logo.png", sizes: "192x192", type: "image/png" },
       { url: "/favicon.ico", sizes: "32x32", type: "image/x-icon" }
     ],
-    shortcut: "/bucks-logo.png",
+    shortcut: "/favicon.svg",
     apple: [
       { url: "/bucks-logo.png", sizes: "180x180", type: "image/png" }
     ],
