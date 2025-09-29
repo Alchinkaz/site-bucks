@@ -401,7 +401,7 @@ export function NewsEditForm({ article, onSave, onCancel }: NewsEditFormProps) {
                         <Textarea
                           value={section.text}
                           onChange={(e) => updateContentSection(index, "text", e.target.value)}
-                          placeholder="Текст секции"
+                          placeholder="Текст секции (вставляйте ссылки полностью — https://example.com — они будут кликабельными)"
                           rows={4}
                         />
                       </div>

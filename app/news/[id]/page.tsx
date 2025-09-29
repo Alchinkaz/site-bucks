@@ -7,6 +7,7 @@ import Navbar from "@/components/navbar"
 import { getNewsWithDetails } from "@/lib/supabase-news"
 import { getContactsData } from "@/lib/supabase-contacts"
 import { useEffect, useState } from "react"
+import LinkifiedText from "@/components/LinkifiedText"
 
 export default function NewsDetailPage({ params }: { params: { id: string } }) {
   const [news, setNews] = useState<any>(null)
@@ -109,7 +110,7 @@ export default function NewsDetailPage({ params }: { params: { id: string } }) {
                     </div>
                   )}
                   {section.text && (
-                    <div className="text-gray-300 leading-relaxed text-lg whitespace-pre-line mb-8">{section.text}</div>
+                    <LinkifiedText text={section.text} className="text-gray-300 leading-relaxed text-lg mb-8" />
                   )}
                 </div>
               ))}
