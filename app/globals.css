@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 20 14% 4.1%; /* Dark gray from palette */
+
+    --card: 0 0% 100%;
+    --card-foreground: 20 14% 4.1%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14% 4.1%;
+
+    --primary: 0 84% 60%; /* Red primary #DC2626 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 20 6% 90%; /* Light gray #E7E5E4 */
+    --secondary-foreground: 20 14% 4.1%;
+
+    --muted: 20 6% 90%;
+    --muted-foreground: 25 5% 45%; /* Medium gray #57534E */
+
+    --accent: 38 92% 50%; /* Orange accent #F59E0B */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%; /* Red destructive */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 20 6% 90%; /* Light gray border */
+    --input: 20 6% 90%;
+    --ring: 38 92% 50%; /* Orange ring */
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Updated dark theme colors to use specified palette */
+    --background: 0 0% 3.9%; /* #0a0a0a - very dark background */
+    --foreground: 0 0% 90%; /* Light text for contrast */
+
+    --card: 0 0% 8.2%; /* #141415 - dark secondary for cards */
+    --card-foreground: 0 0% 90%;
+
+    --popover: 0 0% 8.2%; /* #141415 */
+    --popover-foreground: 0 0% 90%;
+
+    --primary: 142 76% 35%; /* #15a349 - correct green accent as primary */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 10.2%; /* #1a1a1a - dark tertiary */
+    --secondary-foreground: 0 0% 90%;
+
+    --muted: 0 0% 10.2%; /* #1a1a1a */
+    --muted-foreground: 0 0% 60%; /* Lighter muted text */
+
+    --accent: 142 76% 35%; /* #15a349 - correct green accent */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 20%; /* Lighter border for better visibility */
+    --input: 0 0% 15%; /* Slightly lighter input background */
+    --ring: 142 76% 35%; /* Green ring to match accent */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+
+  /* Apply font styling to headings without using undefined font-rubik class */
+  h1,
+  h2,
+  h3 {
+    @apply font-sans;
+    letter-spacing: -0.02em;
+  }
+
+  /* Hide scrollbar but keep scroll functionality */
+  /* Hide scrollbar for webkit browsers (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for Firefox */
+  html {
+    scrollbar-width: none;
+  }
+
+  /* Ensure scrolling still works */
+  html,
+  body {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
