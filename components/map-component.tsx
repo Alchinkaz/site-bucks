@@ -10,14 +10,14 @@ const MapComponent = memo(({ mapIframe }: MapComponentProps) => {
   console.log("MapComponent rendering with iframe:", mapIframe ? "present" : "not present")
 
   return (
-    <div className="bg-gray-700 rounded-2xl overflow-hidden shadow-lg h-[360px] flex items-center justify-center">
+    <div className="bg-gray-700 rounded-2xl overflow-hidden shadow-lg w-full min-h-[360px] self-stretch flex items-center justify-center">
       {mapIframe ? (
         <div
           className="w-full h-full [&>*]:w-full [&>*]:h-full [&_iframe]:w-full [&_iframe]:h-full [&_iframe]:border-0 [&_iframe]:rounded-2xl"
           dangerouslySetInnerHTML={{ __html: mapIframe }}
         />
       ) : (
-        <div style={{ position: "relative", overflow: "hidden", width: "100%", height: "360px" }}>
+        <div style={{ position: "relative", overflow: "hidden", width: "100%", height: "100%", minHeight: "360px" }}>
           <a
             href="https://yandex.kz/maps/162/almaty/?utm_medium=mapframe&utm_source=maps"
             style={{ color: "#eee", fontSize: "12px", position: "absolute", top: "0px" }}
