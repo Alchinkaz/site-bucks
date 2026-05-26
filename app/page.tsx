@@ -600,7 +600,7 @@ export default function Home() {
             {/* Contacts Block - narrower, order-2 на мобильных */}
             <div className="lg:col-span-2 order-2 lg:order-1">
               <div
-                className="rounded-3xl p-8 shadow-xl border border-gray-700 flex flex-col h-[360px]"
+                className="rounded-3xl p-8 shadow-xl border border-gray-700 flex flex-col min-h-[360px]"
                 style={{ backgroundColor: "#141415" }}
               >
                 {/* Large Logo with text */}
@@ -657,6 +657,18 @@ export default function Home() {
                   className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center"
                 >
                   {homepageData?.contactsSection.buttonText}
+                </a>
+
+                <a
+                  href="https://www.instagram.com/obmen_vethoj_valjuty_astana"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 w-full bg-gradient-to-r from-[#f09433] via-[#e6683c] via-[#dc2743] via-[#cc2366] to-[#bc1888] hover:opacity-90 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.336 3.608 1.311.975.975 1.249 2.242 1.311 3.608.058 1.266.069 1.646.069 4.85 0 3.205-.012 3.584-.069 4.85-.062 1.366-.336 2.633-1.311 3.608-.975.975-2.242 1.249-3.608 1.311-1.266.058-1.645.07-4.85.07-3.204 0-3.584-.012-4.849-.07-1.366-.062-2.633-.336-3.608-1.311-.975-.975-1.249-2.242-1.311-3.608-.058-1.266-.07-1.645-.07-4.85 0-3.204.012-3.584.07-4.849.062-1.366.336-2.633 1.311-3.608.975-.975 2.242-1.249 3.608-1.311 1.265-.058 1.645-.07 4.849-.07zm0 2.163c-3.155 0-3.51.012-4.748.068-1.04.048-1.605.218-1.98.362-.498.193-.853.424-1.226.797-.373.373-.604.728-.797 1.226-.144.375-.314.94-.362 1.98-.056 1.238-.068 1.593-.068 4.748 0 3.155.012 3.51.068 4.748.048 1.04.218 1.605.362 1.98.193.498.424.853.797 1.226.373.373.728.604 1.226.797.375.144.94.314 1.98.362 1.238.056 1.593.068 4.748.068 3.155 0 3.51-.012 4.748-.068 1.04-.048 1.605-.218 1.98-.362.498-.193.853-.424 1.226-.797.373-.373.604-.728.797-1.226.144-.375.314-.94.362-1.98.056-1.238.068-1.593.068-4.748 0-3.155-.012-3.51-.068-4.748-.048-1.04-.218-1.605-.362-1.98-.193-.498-.424-.853-.797-1.226-.373-.373-.728-.604-1.226-.797-.375-.144-.94-.314-1.98-.362-1.238-.056-1.593-.068-4.748-.068zm0 3.678a6.162 6.162 0 110 12.324 6.162 6.162 0 010-12.324zm0 10.162a4 4 0 100-8 4 4 0 000 8zm6.406-11.845a1.44 1.44 0 11-2.88 0 1.44 1.44 0 012.88 0z"/>
+                  </svg>
+                  Наш Instagram
                 </a>
               </div>
             </div>
